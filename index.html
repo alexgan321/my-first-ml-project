@@ -30,23 +30,19 @@
 <div class="container">
     <h3>Вставь слово или фразу - получишь озвучку, транскрипцию и перевод</h3>
     
-    <!-- Панель статуса загруженного файла -->
     <div id="statusPanel" class="status-panel">
         📂 <strong>Список:</strong> <span id="listTitleText" style="font-weight: bold; color: #16a34a;">-</span> | 
         <strong>Фраз к изучению:</strong> <span id="fileStatusText">0</span>
     </div>
 
-    <!-- Скрытый инпут диска -->
     <input type="file" id="fileInput" accept=".txt" onchange="handleFileSelect(event)">
 
-    <!-- Первая строка управления -->
     <div class="row">
         <button class="secondary" onclick="triggerFileChoose()">Открыть список слов</button>
         <input type="text" id="wordInput" placeholder="Вставьте слово или фразу" value="">
         <button onclick="processWord()">Показать</button>
     </div>
 
-    <!-- Вторая строка управления + выбор языка -->
     <div class="row">
         <button onclick="nextWord()">Следующее слово</button>
         <button class="secondary" onclick="clearAll()">Очистить</button>
@@ -62,14 +58,12 @@
         </select>
     </div>
 
-    <!-- Блок вывода результата -->
     <div>
         <div class="result-box" id="resultOutput" onclick="speakText()" title="Кликните несколько раз для повторения звука">
             Ожидание ввода...
         </div>
     </div>
 
-    <!-- Блок работы со списками -->
     <div class="section-title">Сохранённые строки</div>
     <div class="row">
         <button class="secondary" onclick="clearSavedList()">Очистить список</button>
@@ -80,7 +74,6 @@
 </div>
 
 <script>
-    // Простой линейный JavaScript, который разрешен для локальных файлов file:///
     var fileWordsArray = [];
     var currentFileIndex = 0;
     var fileHeaderTitle = "";
@@ -113,7 +106,6 @@
         reader.readAsText(file, "UTF-8");
     }
 
-    // Классический перевод без использования блокируемых браузером сетевых функций
     function processWord() {
         var input = document.getElementById('wordInput').value.trim();
         var outputDiv = document.getElementById('resultOutput');
@@ -127,31 +119,47 @@
 
         outputDiv.innerText = "Загрузка перевода...";
 
-        // Используем старый надежный метод запросов XMLHttpRequest, разрешенный для file:///
-        var xhr = new XMLHttpRequest();
-        var url = 'https://translated.net' + encodeURIComponent(input) + '&langpair=' + fromLang + '|ru';
+        var callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
         
-        xhr.open('GET', url, true);
-        xhr.onload = function() {
-            var translation = "[" + input + "]";
-            if (xhr.status >= 200 && xhr.status < 400) {
-                try {
-                    var data = JSON.parse(xhr.responseText);
-                    if (data && data.responseData) {
-                        translation = data.responseData.translatedText;
-                    }
-                } catch(e) {}
-            }
+        var fallbackTimeout = setTimeout(function() {
+            outputDiv.innerText = input + " / [Перевод загружается...]";
+            speakText();
+            window[callbackName] = function() {}; 
+        }, 1500);
+
+        window[callbackName] = function(data) {
+            clearTimeout(fallbackTimeout);
+            var translation = (data && data.responseData) ? data.responseData.translatedText : "[" + input + "]";
             
-            // Вывод результата (без транскрипции, чтобы убрать лишние сетевые запросы, вызывающие ошибки)
-            outputDiv.innerText = input + " / " + translation;
-            speakText();
+            if (fromLang === 'en') {
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', 'https://dictionaryapi.dev' + encodeURIComponent(input), true);
+                xhr.onload = function() {
+                    var transcription = "";
+                    if (xhr.status === 200) {
+                        try {
+                            var resData = JSON.parse(xhr.responseText);
+                            transcription = resData[0]?.phonetic || resData[0]?.phonetics?.find(function(p) { return p.text; })?.text || "";
+                        } catch(e) {}
+                    }
+                    outputDiv.innerText = input + (transcription ? " / [" + transcription + "]" : "") + " / " + translation;
+                    speakText();
+                };
+                xhr.onerror = function() {
+                    outputDiv.innerText = input + " / " + translation;
+                    speakText();
+                };
+                xhr.send();
+            } else {
+                outputDiv.innerText = input + " / " + translation;
+                speakText();
+            }
+            delete window[callbackName];
         };
-        xhr.onerror = function() {
-            outputDiv.innerText = input + " / [Перевод недоступен]";
-            speakText();
-        };
-        xhr.send();
+
+        var script = document.createElement('script');
+        script.src = 'https://translated.net' + encodeURIComponent(input) + '&langpair=' + fromLang + '|ru&callback=' + callbackName;
+        document.body.appendChild(script);
     }
 
     function speakText() {
@@ -189,14 +197,13 @@
         if (!text) return alert("Поле пустое!");
         var audioUrl = "https://google.com" + fromLang + "&client=tw-ob&q=" + encodeURIComponent(text);
         
-        // Безопасное копирование
         var dummy = document.createElement("input");
         document.body.appendChild(dummy);
         dummy.value = audioUrl;
         dummy.select();
         document.execCommand("copy");
         document.body.removeChild(dummy);
-        alert("Ссылка на звук скопирована!");
+        alert("Ссылка на звук скопирована в буфер обмена!");
     }
 
     function exportList() {
@@ -205,13 +212,3 @@
             return;
         }
         
-        var select = document.getElementById('langSelect');
-        var fromLang = select.options[select.selectedIndex].getAttribute('data-lang');
-        var exportBtn = document.getElementById('exportBtn');
-        
-        exportBtn.disabled = true;
-        exportBtn.innerText = "Экспорт запущен...";
-
-        var dictionaryLines = [fileHeaderTitle + " - Словарь"];
-        var processedCount = 0;
-
