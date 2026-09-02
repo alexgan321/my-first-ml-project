@@ -112,7 +112,7 @@
     <div class="row">
         <input type="file" id="fileInput" accept=".txt">
         <button class="btn-outline" onclick="document.getElementById('fileInput').click()">Открыть список слов</button>
-        <input type="text" id="phraseInput" placeholder="Введите иностранное слово или фразу">
+        <input type="text" id="phraseInput" placeholder="Введите иностранное слово">
         <button onclick="handleManualShow()">Показать</button>
     </div>
 
@@ -122,12 +122,12 @@
         <button onclick="copyAudio()">Копировать звук</button>
         
         <select id="langSelect">
-            <option value="en-US">🇺🇸 us США</option>
-            <option value="en-GB">🇬🇧 GB Английский</option>
-            <option value="fr-FR">🇫🇷 FR Французский</option>
-            <option value="sr-RS">🇷🇸 RS Сербский</option>
-            <option value="zh-CN">🇨🇳 CN Китайский</option>
-            <option value="be-BY">🇧🇾 BY Белорусский</option>
+            <option value="en">🇺🇸 us США</option>
+            <option value="en">🇬🇧 GB Английский</option>
+            <option value="fr">🇫🇷 FR Французский</option>
+            <option value="sr">🇷🇸 RS Сербский</option>
+            <option value="zh">🇨🇳 CN Китайский</option>
+            <option value="be">🇧🇾 BY Белорусский</option>
         </select>
     </div>
 
@@ -145,40 +145,54 @@
         let wordsQueue = []; 
         let currentQueueIndex = -1; 
 
-        // Локальный словарь для мгновенного перевода (для всех ваших 6 уроков фраз и слов)
-        const localDictionary = {
-            // Английский (США и Великобритания)
-            "hello": "Привет",
-            "how are you": "Как дела?",
-            "what is your name": "Как тебя зовут?",
-            "discuss": "обсуждать",
-            "disclose": "раскрывать",
-            "express": "выражать",
-            "bonjour": "Здравствуйте / Привет",
-            "comment ça va": "Как дела?",
-            "comment vous vous appelez": "Как вас зовут?",
-            
-            // Сюда можно легко дописывать новые слова по шаблону: "слово": "перевод",
-        };
-
-        // Локальная функция перевода — работает мгновенно и без интернета
-        function translateToRussian(text) {
-            if (!text) return "";
-            // Если строка уже содержит русские буквы (служебная строка), возвращаем её как есть
-            if (/[а-яА-ЯёЁ]/.test(text)) {
-                return null;
-            }
-
-            // Переводим текст в нижний регистр и убираем знаки препинания для точного поиска
-            const cleanKey = text.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g,"").trim();
-            
-            // Ищем перевод в нашем словаре. Если слова нет, оставляем его без перевода
-            if (localDictionary[cleanKey]) {
-                return localDictionary[cleanKey];
-            }
-            return "перевод не найден"; 
+        // Получение чистого кода языка из выпадающего списка
+        function getLangCode() {
+            return document.getElementById('langSelect').value;
         }
 
+        // Автоматический перевод через MyMemory API (полный обход CORS для локальных файлов)
+        function translateOnline(text, callback) {
+            if (/[а-яА-ЯёЁ]/.test(text)) {
+                callback(null);
+                return;
+            }
+
+            const fromLang = getLangCode();
+            const callbackName = 'mymemoryCallback_' + Math.round(Math.random() * 100000);
+            
+            // Создаем временную функцию для приема ответа от сервера
+            window[callbackName] = function(data) {
+                delete window[callbackName];
+                const scriptEl = document.getElementById(callbackName);
+                if (scriptEl) document.body.removeChild(scriptEl);
+                
+                try {
+                    if (data && data.responseData && data.responseData.translatedText) {
+                        callback(data.responseData.translatedText);
+                    } else {
+                        callback(text);
+                    }
+                } catch (e) {
+                    callback(text);
+                }
+            };
+
+            // Подключаем скрипт к MyMemory — этот сервер разрешает запросы с диска!
+            const script = document.createElement('script');
+            script.id = callbackName;
+            script.src = 'https://translated.net' + encodeURIComponent(text) + '&langpair=' + fromLang + '|ru&callback=' + callbackName;
+            
+            script.onerror = function() {
+                delete window[callbackName];
+                const scriptEl = document.getElementById(callbackName);
+                if (scriptEl) document.body.removeChild(scriptEl);
+                callback("Ошибка сети");
+            };
+            
+            document.body.appendChild(script);
+        }
+
+        // Выделение иностранной части строки для озвучки (до знака " — ")
         function cleanTextForSpeech(text) {
             if (!text) return '';
             const separatorIndex = text.indexOf(' — ');
@@ -188,16 +202,19 @@
             return text.trim();
         }
 
+        // Функция озвучки речи движком браузера
         function speak(text) {
             const cleanText = cleanTextForSpeech(text);
             if (!cleanText) return;
             
             window.speechSynthesis.cancel(); 
             const utterance = new SpeechSynthesisUtterance(cleanText);
-            utterance.lang = document.getElementById('langSelect').value;
+            const fullLang = document.getElementById('langSelect').value;
+            utterance.lang = fullLang === 'en' ? 'en-US' : (fullLang === 'fr' ? 'fr-FR' : (fullLang === 'zh' ? 'zh-CN' : (fullLang === 'be' ? 'be-BY' : 'sr-RS')));
             window.speechSynthesis.speak(utterance);
         }
 
+        // Добавление строк в блок "Сохранённые строки"
         function addToList(text) {
             const list = document.getElementById('savedList');
             const item = document.createElement('div');
@@ -207,6 +224,7 @@
             list.appendChild(item);
         }
 
+        // Кнопка "Показать" (Ручной ввод произвольного слова)
         function handleManualShow() {
             const input = document.getElementById('phraseInput');
             const text = input.value.trim();
@@ -218,19 +236,19 @@
                 return;
             }
 
-            const translation = translateToRussian(text);
-            let resultText = text;
-            if (translation && translation !== "перевод не найден") {
-                resultText = text + " — " + translation;
-            } else if (translation === "перевод не найден") {
-                resultText = text + " — (добавьте перевод в словарь)";
-            }
-            
-            input.value = resultText; 
-            addToList(resultText); 
-            speak(resultText);     
+            input.value = "Перевод...";
+            translateOnline(text, function(translation) {
+                let resultText = text;
+                if (translation) {
+                    resultText = text + " — " + translation;
+                }
+                input.value = resultText; 
+                addToList(resultText); 
+                speak(resultText);
+            });
         }
 
+        // Обработка строк, загруженных из файлов уроков
         function processWord(word) {
             if (!word) return;
 
@@ -240,19 +258,16 @@
                 return;
             }
 
-            const translation = translateToRussian(word);
-            let resultText = word;
-            if (translation && translation !== "перевод не найден") {
-                resultText = word + " — " + translation;
-            } else {
-                resultText = word + " — (нет в словаре)";
-            }
-            
-            document.getElementById('phraseInput').value = resultText; 
-            addToList(resultText); 
-            speak(resultText);
+            document.getElementById('phraseInput').value = "Перевод...";
+            translateOnline(word, function(translation) {
+                const resultText = word + " — " + translation;
+                document.getElementById('phraseInput').value = resultText; 
+                addToList(resultText); 
+                speak(resultText);
+            });
         }
 
+        // Кнопка "Открыть список слов"
         document.getElementById('fileInput').addEventListener('change', function(e) {
             const files = e.target.files; 
             if (!files || files.length === 0) return;
@@ -271,10 +286,11 @@
                     alert('Файл пуст.');
                 }
             };
-            reader.readAsText(files[0]);
+            reader.readAsText(files[0]); // Читаем первый выбранный файл
             this.value = '';
         });
 
+        // Кнопка "Следующее слово"
         function nextWord() {
             if (wordsQueue.length === 0) {
                 alert('Сначала откройте список слов с диска!');
@@ -328,9 +344,6 @@
     </script>
 </body>
 </html>
-
-
-
 
 
 
