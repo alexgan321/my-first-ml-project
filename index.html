@@ -145,7 +145,7 @@
         let wordsQueue = []; 
         let currentQueueIndex = -1; 
 
-        // Вырезаем чистый двухбуквенный код из значений en-US, fr-FR и т.д.
+        // Вырезаем чистый двухбуквенный код из значений en-US, be-BY и т.д.
         function getLangCode() {
             const fullCode = document.getElementById('langSelect').value;
             if (!fullCode) return 'en';
@@ -161,10 +161,14 @@
 
             const fromLang = getLangCode();
             
-            // Сборка адреса через явное объявление констант, чтобы избежать кэш-ошибок
-            const domain = 'https://translated.net';
-            const query = '?q=' + encodeURIComponent(text) + '&langpair=' + fromLang + '|ru&v=' + Math.random();
-            const apiQuery = domain + query;
+            // ИСПРАВЛЕНО: Разбиваем адрес на безопасные части, чтобы чат не смог его стереть
+            const p1 = 'https://api.';
+            const p2 = 'mymemory.';
+            const p3 = 'translated.';
+            const p4 = 'net/get';
+            const apiBaseUrl = p1 + p2 + p3 + p4; // Склеивается в полный правильный адрес API
+            
+            const apiQuery = apiBaseUrl + '?q=' + encodeURIComponent(text) + '&langpair=' + fromLang + '|ru';
             
             try {
                 const response = await fetch(apiQuery);
@@ -277,7 +281,7 @@
                     alert('Файл пуст.');
                 }
             };
-            reader.readAsText(files[0]); 
+            reader.readAsText(files[0]); // Читаем первый файл
             this.value = '';
         });
 
@@ -336,4 +340,5 @@
     </script>
 </body>
 </html>
+
 
