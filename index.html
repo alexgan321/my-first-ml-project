@@ -148,21 +148,23 @@
         // Вырезаем чистый двухбуквенный код из значений en-US, fr-FR и т.д.
         function getLangCode() {
             const fullCode = document.getElementById('langSelect').value;
+            if (!fullCode) return 'en';
             return fullCode.substring(0, 2); 
         }
 
         // Онлайн-перевод через fetch-запрос к MyMemory API
         async function translateOnline(text, callback) {
-            if (/[а-яА-ЯёЁ]/.test(text)) {
+            if (!text || /[а-яА-ЯёЁ]/.test(text)) {
                 callback(null);
                 return;
             }
 
             const fromLang = getLangCode();
             
-            // Собираем адрес по кускам через плюс — теперь робот ничего не сотрет!
-            const apiBase = 'https://translated.net';
-            const apiQuery = apiBase + '?q=' + encodeURIComponent(text) + '&langpair=' + fromLang + '|ru';
+            // Сборка адреса через явное объявление констант, чтобы избежать кэш-ошибок
+            const domain = 'https://translated.net';
+            const query = '?q=' + encodeURIComponent(text) + '&langpair=' + fromLang + '|ru&v=' + Math.random();
+            const apiQuery = domain + query;
             
             try {
                 const response = await fetch(apiQuery);
@@ -199,7 +201,6 @@
             const utterance = new SpeechSynthesisUtterance(cleanText);
             const fullLang = document.getElementById('langSelect').value;
             
-            // Передаем полный код с регионом для красивого акцента озвучки
             utterance.lang = fullLang; 
             window.speechSynthesis.speak(utterance);
         }
@@ -276,7 +277,7 @@
                     alert('Файл пуст.');
                 }
             };
-            reader.readAsText(files[0]); // Читаем конкретный первый файл
+            reader.readAsText(files[0]); 
             this.value = '';
         });
 
@@ -335,3 +336,4 @@
     </script>
 </body>
 </html>
+
