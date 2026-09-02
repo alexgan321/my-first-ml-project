@@ -125,9 +125,9 @@
             <option value="en-US">🇺🇸 us США</option>
             <option value="en-GB">🇬🇧 GB Английский</option>
             <option value="fr-FR">🇫🇷 FR Французский</option>
-            <option value="sr">🇷🇸 RS Сербский</option>
+            <option value="sr-RS">🇷🇸 RS Сербский</option>
             <option value="zh-CN">🇨🇳 CN Китайский</option>
-            <option value="be">🇧🇾 BY Белорусский</option>
+            <option value="be-BY">🇧🇾 BY Белорусский</option>
         </select>
     </div>
 
@@ -145,13 +145,13 @@
         let wordsQueue = []; 
         let currentQueueIndex = -1; 
 
-        // Получение чистого кода языка из выпадающего списка
+        // Вырезаем чистый двухбуквенный код из значений en-US, fr-FR и т.д.
         function getLangCode() {
             const fullCode = document.getElementById('langSelect').value;
-            return fullCode.substring(0, 2); // Гарантированно берем 'en', 'fr', 'zh', 'be', 'sr'
+            return fullCode.substring(0, 2); 
         }
 
-        // Автоматический перевод через MyMemory API
+        // Онлайн-перевод через fetch-запрос к MyMemory API
         async function translateOnline(text, callback) {
             if (/[а-яА-ЯёЁ]/.test(text)) {
                 callback(null);
@@ -159,14 +159,16 @@
             }
 
             const fromLang = getLangCode();
-            const url = 'https://translated.net' + encodeURIComponent(text) + '&langpair=' + fromLang + '|ru';
+            
+            // Собираем адрес по кускам через плюс — теперь робот ничего не сотрет!
+            const apiBase = 'https://translated.net';
+            const apiQuery = apiBase + '?q=' + encodeURIComponent(text) + '&langpair=' + fromLang + '|ru';
             
             try {
-                const response = await fetch(url);
+                const response = await fetch(apiQuery);
                 if (!response.ok) throw new Error('Ошибка сервера');
                 const data = await response.json();
                 
-                // ТОЧНОЕ ИЗВЛЕЧЕНИЕ: Извлекаем текстовый перевод из официального ответа MyMemory
                 if (data && data.responseData && data.responseData.translatedText) {
                     callback(data.responseData.translatedText);
                 } else {
@@ -178,7 +180,7 @@
             }
         }
 
-        // Выделение иностранной части строки для озвучки (до знака " — ")
+        // Очистка строки от русского перевода перед озвучкой
         function cleanTextForSpeech(text) {
             if (!text) return '';
             const separatorIndex = text.indexOf(' — ');
@@ -197,17 +199,12 @@
             const utterance = new SpeechSynthesisUtterance(cleanText);
             const fullLang = document.getElementById('langSelect').value;
             
-            // Карта точного подбора голоса
-            if (fullLang.startsWith('en')) utterance.lang = 'en-US';
-            else if (fullLang.startsWith('fr')) utterance.lang = 'fr-FR';
-            else if (fullLang.startsWith('zh')) utterance.lang = 'zh-CN';
-            else if (fullLang.startsWith('be')) utterance.lang = 'be-BY';
-            else if (fullLang.startsWith('sr')) utterance.lang = 'sr-RS';
-            
+            // Передаем полный код с регионом для красивого акцента озвучки
+            utterance.lang = fullLang; 
             window.speechSynthesis.speak(utterance);
         }
 
-        // Добавление строк в блок "Сохранённые строки"
+        // Вывод строк в блок истории на экране
         function addToList(text) {
             const list = document.getElementById('savedList');
             const item = document.createElement('div');
@@ -217,7 +214,7 @@
             list.appendChild(item);
         }
 
-        // Кнопка "Показать" (Ручной ввод произвольного слова)
+        // Кнопка "Показать" (Ручной ввод)
         function handleManualShow() {
             const input = document.getElementById('phraseInput');
             const text = input.value.trim();
@@ -241,7 +238,7 @@
             });
         }
 
-        // Обработка строк, загруженных из файлов уроков
+        // Обработка слов и фраз из файлов уроков
         function processWord(word) {
             if (!word) return;
 
@@ -260,7 +257,7 @@
             });
         }
 
-        // Кнопка "Открыть список слов"
+        // Кнопка "Открыть список слов" (Чтение текстового файла)
         document.getElementById('fileInput').addEventListener('change', function(e) {
             const files = e.target.files; 
             if (!files || files.length === 0) return;
@@ -279,7 +276,7 @@
                     alert('Файл пуст.');
                 }
             };
-            reader.readAsText(files[0]); // Читаем первый выбранный файл из массива
+            reader.readAsText(files[0]); // Читаем конкретный первый файл
             this.value = '';
         });
 
@@ -303,7 +300,6 @@
             document.getElementById('phraseInput').value = '';
         }
 
-        // Исправлено: Полный сброс всех индексов очереди при очистке
         function clearList() {
             document.getElementById('savedList').innerHTML = '';
             wordsQueue = [];
@@ -319,6 +315,7 @@
             alert('Текст скопирован!');
         }
 
+        // Экспорт списка
         function exportList() {
             const items = document.querySelectorAll('.list-item');
             if (items.length === 0) return alert('Список пуст!');
@@ -338,9 +335,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
