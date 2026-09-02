@@ -11,10 +11,28 @@
             background-color: #f8f9fa;
             color: #000;
         }
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            max-width: 750px;
+        }
         h3 {
             font-weight: bold;
-            margin-bottom: 20px;
+            margin: 0;
             font-size: 18px;
+        }
+        /* Ссылка на вызов инструкции */
+        .instruction-link {
+            color: #3b82f6;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .instruction-link:hover {
+            color: #2563eb;
         }
         .row {
             display: flex;
@@ -104,12 +122,12 @@
             display: none;
         }
 
-        /* Стильное всплывающее окно инструкции */
+        /* Стильное всплывающее окно инструкции (скрыто по умолчанию: display: none) */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.5);
-            display: flex; justify-content: center; align-items: center;
+            display: none; justify-content: center; align-items: center;
             z-index: 1000;
         }
         .modal-box {
@@ -148,7 +166,7 @@
 </head>
 <body>
 
-    <!-- Всплывающее окно инструкции при входе -->
+    <!-- Всплывающее окно инструкции (скрыто по умолчанию) -->
     <div class="modal-overlay" id="instructionModal">
         <div class="modal-box">
             <div class="modal-header">
@@ -170,7 +188,11 @@
         </div>
     </div>
 
-    <h3>Вставь слово или фразу - получишь озвучку, транскрипцию и перевод</h3>
+    <!-- Заголовок с кнопкой вызова Справки -->
+    <div class="header-row">
+        <h3>Вставь слово или фразу - получишь озвучку, транскрипцию и перевод</h3>
+        <span class="instruction-link" onclick="openModal()">Инструкция</span>
+    </div>
 
     <div class="row">
         <input type="file" id="fileInput" accept=".txt">
@@ -208,12 +230,15 @@
         let wordsQueue = []; 
         let currentQueueIndex = -1; 
 
-        // Функция закрытия всплывающего окна инструкции
+        // ИСПРАВЛЕНО: Функции управления окном инструкции
+        function openModal() {
+            const modal = document.getElementById('instructionModal');
+            if (modal) modal.style.display = 'flex';
+        }
+
         function closeModal() {
             const modal = document.getElementById('instructionModal');
-            if (modal) {
-                modal.style.display = 'none';
-            }
+            if (modal) modal.style.display = 'none';
         }
 
         // Вырезаем чистый двухбуквенный код из значений en-US, be-BY и т.д.
@@ -239,7 +264,8 @@
             const p4 = 'net/get';
             const apiBaseUrl = p1 + p2 + p3 + p4; 
             
-            const apiQuery = apiBaseUrl + '?q=' + encodeURIComponent(text) + '&langpair=' + fromLang + '|ru';
+            // Добавляем случайное число &v=..., чтобы пробить кэш серверов
+            const apiQuery = apiBaseUrl + '?q=' + encodeURIComponent(text) + '&langpair=' + fromLang + '|ru&v=' + Math.random();
             
             try {
                 const response = await fetch(apiQuery);
@@ -352,7 +378,7 @@
                     alert('Файл пуст.');
                 }
             };
-            // ИСПРАВЛЕНО: Теперь читаем строго первый выбранный файл из массива!
+            // Читаем строго первый выбранный файл из массива
             reader.readAsText(files[0]); 
             this.value = '';
         });
@@ -384,7 +410,6 @@
             clearInput();
         }
 
-        // Копировать звук
         function copyAudio() {
             const input = document.getElementById('phraseInput').value;
             if (!input) return;
@@ -413,4 +438,3 @@
     </script>
 </body>
 </html>
-
