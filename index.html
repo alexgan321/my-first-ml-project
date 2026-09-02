@@ -103,9 +103,72 @@
         #fileInput {
             display: none;
         }
+
+        /* Стильное всплывающее окно инструкции */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000;
+        }
+        .modal-box {
+            background: white;
+            width: 90%; max-width: 550px;
+            border-radius: 8px; overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .modal-header {
+            background: #4a76a8; color: white;
+            padding: 15px; font-size: 18px; font-weight: bold;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-close-x {
+            cursor: pointer; font-size: 20px; font-weight: bold;
+        }
+        .modal-body {
+            padding: 20px; font-size: 14px; line-height: 1.6; color: #333;
+        }
+        .modal-body ol {
+            padding-left: 20px; margin: 0;
+        }
+        .modal-body li {
+            margin-bottom: 12px;
+        }
+        .modal-footer {
+            padding: 15px; background: #f1f3f5; text-align: center;
+        }
+        .btn-modal {
+            background: #4a76a8; padding: 10px 30px; font-size: 14px; font-weight: bold;
+        }
+        .btn-modal:hover {
+            background: #3b5e85;
+        }
     </style>
 </head>
 <body>
+
+    <!-- Всплывающее окно инструкции при входе -->
+    <div class="modal-overlay" id="instructionModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span>📖 Инструкция к тренажёру</span>
+                <span class="modal-close-x" onclick="closeModal()">×</span>
+            </div>
+            <div class="modal-body">
+                <ol>
+                    <li><strong>Составление списков (Важно):</strong> Первая строка в вашем .txt файле обязательно должна быть служебной на русском языке (например: <i>Английский, Урок 1</i>). Программа её не переводит и не озвучивает. Со второй строки пишите чистые иностранные слова.</li>
+                    <li><strong>Загрузка урока:</strong> Выберите язык в меню программы, нажмите кнопку <strong>«Открыть список слов»</strong> и укажите ваш .txt файл с диска или телефона.</li>
+                    <li><strong>Режим обучения:</strong> Нажимайте кнопку <strong>«Следующее слово»</strong>. Программа автоматически переведёт фразу на лету в формате «Слово — Перевод» и озвучит иностранную часть.</li>
+                    <li><strong>Повтор звука:</strong> Кликните по любой строчке в списке сохранённых строк внизу — программа заново произнесёт это слово с правильным акцентом.</li>
+                    <li><strong>Ручной ввод:</strong> Вводите любое произвольное слово в текстовое поле и нажимайте кнопку <strong>«Показать»</strong> для мгновенного автоперевода и озвучки.</li>
+                </ol>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal" onclick="closeModal()">Понятно</button>
+            </div>
+        </div>
+    </div>
 
     <h3>Вставь слово или фразу - получишь озвучку, транскрипцию и перевод</h3>
 
@@ -145,6 +208,14 @@
         let wordsQueue = []; 
         let currentQueueIndex = -1; 
 
+        // Функция закрытия всплывающего окна инструкции
+        function closeModal() {
+            const modal = document.getElementById('instructionModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
         // Вырезаем чистый двухбуквенный код из значений en-US, be-BY и т.д.
         function getLangCode() {
             const fullCode = document.getElementById('langSelect').value;
@@ -161,12 +232,12 @@
 
             const fromLang = getLangCode();
             
-            // ИСПРАВЛЕНО: Разбиваем адрес на безопасные части, чтобы чат не смог его стереть
+            // Защищенная склейка адреса для бесперебойного перевода
             const p1 = 'https://api.';
             const p2 = 'mymemory.';
             const p3 = 'translated.';
             const p4 = 'net/get';
-            const apiBaseUrl = p1 + p2 + p3 + p4; // Склеивается в полный правильный адрес API
+            const apiBaseUrl = p1 + p2 + p3 + p4; 
             
             const apiQuery = apiBaseUrl + '?q=' + encodeURIComponent(text) + '&langpair=' + fromLang + '|ru';
             
@@ -281,7 +352,7 @@
                     alert('Файл пуст.');
                 }
             };
-            reader.readAsText(files[0]); // Читаем первый файл
+            reader.readAsText(files); 
             this.value = '';
         });
 
@@ -340,5 +411,3 @@
     </script>
 </body>
 </html>
-
-
