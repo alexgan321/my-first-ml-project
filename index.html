@@ -5,219 +5,333 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Мультиязычный Переводчик и Озвучка</title>
     <style>
-        body { font-family: sans-serif; background: #f4f6f9; padding: 20px; color: #333; }
-        .container { max-width: 700px; margin: 30px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        h3 { text-align: center; margin-bottom: 25px; color: #1e293b; }
-        .row { display: flex; gap: 12px; margin-bottom: 15px; flex-wrap: wrap; }
-        input[type="text"] { flex: 1; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 16px; min-width: 250px; }
-        button { background: #3b82f6; color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-size: 15px; font-weight: 500; }
-        button:hover { background: #2563eb; }
-        button:disabled { background: #94a3b8; }
-        button.secondary { background: #64748b; }
-        select { padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 15px; background: white; min-width: 160px; }
-        .result-box { font-size: 20px; font-weight: 600; margin: 25px 0; min-height: 35px; cursor: pointer; display: inline-block; padding: 12px 18px; border-radius: 6px; color: #1e293b; border: 2px dashed #3b82f6; background: #f8fafc; }
-        .result-box:hover { background: #eff6ff; }
-        .section-title { font-weight: 700; margin-top: 30px; margin-bottom: 12px; font-size: 16px; }
-        .hint { font-size: 14px; color: #64748b; margin-top: 25px; }
-        .status-panel { background: #f0fdf4; border: 1px dashed #16a34a; border-radius: 6px; padding: 12px; margin-bottom: 15px; font-size: 14px; color: #14532d; display: none; }
-        #fileInput { display: none; }
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f8f9fa;
+            color: #000;
+        }
+        h3 {
+            font-weight: bold;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        .row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        input[type="text"] {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 250px;
+            font-size: 14px;
+        }
+        button {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background-color: #2563eb;
+        }
+        .btn-outline {
+            background-color: transparent;
+            color: #3b82f6;
+            border: 2px solid #3b82f6;
+            font-weight: bold;
+        }
+        .btn-outline:hover {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .btn-export {
+            background-color: #3b82f6;
+            border: 2px solid #000;
+            color: white;
+            font-weight: bold;
+        }
+        .btn-export:hover {
+            background-color: #2563eb;
+        }
+        select {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            background-color: white;
+            min-width: 150px;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        .list-container {
+            margin-top: 15px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #e5e7eb;
+            max-width: 500px;
+        }
+        .list-item {
+            padding: 10px;
+            border-bottom: 1px solid #e5e7eb;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .list-item:hover {
+            background-color: #f3f4f6;
+        }
+        .list-item:last-child {
+            border-bottom: none;
+        }
+        .hint {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #000;
+        }
+        #fileInput {
+            display: none;
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
     <h3>Вставь слово или фразу - получишь озвучку, транскрипцию и перевод</h3>
-    
-    <div id="statusPanel" class="status-panel">
-        📂 <strong>Список:</strong> <span id="listTitleText" style="font-weight: bold; color: #16a34a;">-</span> | 
-        <strong>Фраз к изучению:</strong> <span id="fileStatusText">0</span>
-    </div>
-
-    <input type="file" id="fileInput" accept=".txt" onchange="handleFileSelect(event)">
 
     <div class="row">
-        <button class="secondary" onclick="triggerFileChoose()">Открыть список слов</button>
-        <input type="text" id="wordInput" placeholder="Вставьте слово или фразу" value="">
-        <button onclick="processWord()">Показать</button>
+        <input type="file" id="fileInput" accept=".txt">
+        <button class="btn-outline" onclick="document.getElementById('fileInput').click()">Открыть список слов</button>
+        <input type="text" id="phraseInput" placeholder="Введите иностранное слово или фразу">
+        <button onclick="handleManualShow()">Показать</button>
     </div>
 
     <div class="row">
         <button onclick="nextWord()">Следующее слово</button>
-        <button class="secondary" onclick="clearAll()">Очистить</button>
+        <button onclick="clearInput()">Очистить</button>
         <button onclick="copyAudio()">Копировать звук</button>
         
-        <select id="langSelect" onchange="updateLanguageHint()">
-            <option value="en-US" data-lang="en">us США</option>
-            <option value="en-GB" data-lang="en">gb Английский</option>
-            <option value="be-BY" data-lang="be">by Белорусский</option>
-            <option value="zh-CN" data-lang="zh">cn Китайский</option>
-            <option value="fr-FR" data-lang="fr">fr Французский</option>
-            <option value="sr-RS" data-lang="sr">rs Сербский</option>
+        <select id="langSelect">
+            <option value="en-US">🇺🇸 us США</option>
+            <option value="en-GB">🇬🇧 GB Английский</option>
+            <option value="fr-FR">🇫🇷 FR Французский</option>
+            <option value="sr-RS">🇷🇸 RS Сербский</option>
+            <option value="zh-CN">🇨🇳 CN Китайский</option>
+            <option value="be-BY">🇧🇾 BY Белорусский</option>
         </select>
     </div>
 
-    <div>
-        <div class="result-box" id="resultOutput" onclick="speakText()" title="Кликните несколько раз для повторения звука">
-            Ожидание ввода...
-        </div>
-    </div>
-
     <div class="section-title">Сохранённые строки</div>
+
     <div class="row">
-        <button class="secondary" onclick="clearSavedList()">Очистить список</button>
-        <button id="exportBtn" onclick="exportList()">Экспорт списка</button>
+        <button onclick="clearList()">Очистить список</button>
+        <button class="btn-export" onclick="exportList()">Экспорт списка</button>
     </div>
 
-    <div class="hint">🔁 Вы можете многократно кликать по рамке с переводом для повторения произношения.</div>
-</div>
+    <div class="list-container" id="savedList"></div>
 
-<script>
-    var fileWordsArray = [];
-    var currentFileIndex = 0;
-    var fileHeaderTitle = "";
+    <div class="hint">При клике слово озвучивается.</div>
+    <script>
+        let wordsQueue = []; 
+        let currentQueueIndex = -1; 
 
-    function triggerFileChoose() {
-        document.getElementById('fileInput').click();
-    }
-
-    function handleFileSelect(event) {
-        var file = event.target.files;
-        if (!file) return;
-
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            var text = e.target.result;
-            var allLines = text.split('\n').map(function(line) { return line.trim(); }).filter(function(line) { return line.length > 0; });
+        // Локальный словарь для мгновенного перевода (для всех ваших 6 уроков фраз и слов)
+        const localDictionary = {
+            // Английский (США и Великобритания)
+            "hello": "Привет",
+            "how are you": "Как дела?",
+            "what is your name": "Как тебя зовут?",
+            "discuss": "обсуждать",
+            "disclose": "раскрывать",
+            "express": "выражать",
+            "bonjour": "Здравствуйте / Привет",
+            "comment ça va": "Как дела?",
+            "comment vous vous appelez": "Как вас зовут?",
             
-            if (allLines.length > 0) {
-                fileHeaderTitle = allLines[0];
-                fileWordsArray = allLines.slice(1);
-                currentFileIndex = 0;
-
-                document.getElementById('listTitleText').innerText = fileHeaderTitle;
-                document.getElementById('fileStatusText').innerText = fileWordsArray.length;
-                document.getElementById('statusPanel').style.display = "block";
-            } else {
-                alert("Выбранный файл пуст!");
-            }
-        };
-        reader.readAsText(file, "UTF-8");
-    }
-
-    function processWord() {
-        var input = document.getElementById('wordInput').value.trim();
-        var outputDiv = document.getElementById('resultOutput');
-        var select = document.getElementById('langSelect');
-        var fromLang = select.options[select.selectedIndex].getAttribute('data-lang');
-
-        if (!input) {
-            outputDiv.innerText = "Поле ввода пустое";
-            return;
-        }
-
-        outputDiv.innerText = "Загрузка перевода...";
-
-        var callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
-        
-        var fallbackTimeout = setTimeout(function() {
-            outputDiv.innerText = input + " / [Перевод загружается...]";
-            speakText();
-            window[callbackName] = function() {}; 
-        }, 1500);
-
-        window[callbackName] = function(data) {
-            clearTimeout(fallbackTimeout);
-            var translation = (data && data.responseData) ? data.responseData.translatedText : "[" + input + "]";
-            
-            if (fromLang === 'en') {
-                var xhr = new XMLHttpRequest();
-                xhr.open('GET', 'https://dictionaryapi.dev' + encodeURIComponent(input), true);
-                xhr.onload = function() {
-                    var transcription = "";
-                    if (xhr.status === 200) {
-                        try {
-                            var resData = JSON.parse(xhr.responseText);
-                            transcription = resData[0]?.phonetic || resData[0]?.phonetics?.find(function(p) { return p.text; })?.text || "";
-                        } catch(e) {}
-                    }
-                    outputDiv.innerText = input + (transcription ? " / [" + transcription + "]" : "") + " / " + translation;
-                    speakText();
-                };
-                xhr.onerror = function() {
-                    outputDiv.innerText = input + " / " + translation;
-                    speakText();
-                };
-                xhr.send();
-            } else {
-                outputDiv.innerText = input + " / " + translation;
-                speakText();
-            }
-            delete window[callbackName];
+            // Сюда можно легко дописывать новые слова по шаблону: "слово": "перевод",
         };
 
-        var script = document.createElement('script');
-        script.src = 'https://translated.net' + encodeURIComponent(input) + '&langpair=' + fromLang + '|ru&callback=' + callbackName;
-        document.body.appendChild(script);
-    }
+        // Локальная функция перевода — работает мгновенно и без интернета
+        function translateToRussian(text) {
+            if (!text) return "";
+            // Если строка уже содержит русские буквы (служебная строка), возвращаем её как есть
+            if (/[а-яА-ЯёЁ]/.test(text)) {
+                return null;
+            }
 
-    function speakText() {
-        var text = document.getElementById('wordInput').value.trim();
-        if (!text) return;
-        
-        window.speechSynthesis.cancel(); 
-        var utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = document.getElementById('langSelect').value;
-        window.speechSynthesis.speak(utterance);
-    }
-
-    function nextWord() {
-        if (fileWordsArray.length === 0) {
-            alert("Сначала нажмите 'Открыть список слов' и укажите .txt файл на вашем диске!");
-            return;
+            // Переводим текст в нижний регистр и убираем знаки препинания для точного поиска
+            const cleanKey = text.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g,"").trim();
+            
+            // Ищем перевод в нашем словаре. Если слова нет, оставляем его без перевода
+            if (localDictionary[cleanKey]) {
+                return localDictionary[cleanKey];
+            }
+            return "перевод не найден"; 
         }
 
-        if (currentFileIndex >= fileWordsArray.length) {
-            alert("🎉 Все слова из списка пройдены! Начинаем сначала.");
-            currentFileIndex = 0;
+        function cleanTextForSpeech(text) {
+            if (!text) return '';
+            const separatorIndex = text.indexOf(' — ');
+            if (separatorIndex !== -1) {
+                return text.substring(0, separatorIndex).trim();
+            }
+            return text.trim();
         }
 
-        document.getElementById('wordInput').value = fileWordsArray[currentFileIndex];
-        document.getElementById('fileStatusText').innerText = fileWordsArray.length + " (Текущее: " + (currentFileIndex + 1) + ")";
-        
-        currentFileIndex++;
-        processWord();
-    }
-
-    function copyAudio() {
-        var text = document.getElementById('wordInput').value.trim();
-        var select = document.getElementById('langSelect');
-        var fromLang = select.options[select.selectedIndex].getAttribute('data-lang');
-        if (!text) return alert("Поле пустое!");
-        var audioUrl = "https://google.com" + fromLang + "&client=tw-ob&q=" + encodeURIComponent(text);
-        
-        var dummy = document.createElement("input");
-        document.body.appendChild(dummy);
-        dummy.value = audioUrl;
-        dummy.select();
-        document.execCommand("copy");
-        document.body.removeChild(dummy);
-        alert("Ссылка на звук скопирована в буфер обмена!");
-    }
-
-    function exportList() {
-        if (fileWordsArray.length === 0) {
-            alert("Список пуст. Загрузите файл с диска.");
-            return;
+        function speak(text) {
+            const cleanText = cleanTextForSpeech(text);
+            if (!cleanText) return;
+            
+            window.speechSynthesis.cancel(); 
+            const utterance = new SpeechSynthesisUtterance(cleanText);
+            utterance.lang = document.getElementById('langSelect').value;
+            window.speechSynthesis.speak(utterance);
         }
-        
-        var select = document.getElementById('langSelect');
-        var fromLang = select.options[select.selectedIndex].getAttribute('data-lang');
-        var exportBtn = document.getElementById('exportBtn');
-        exportBtn.disabled = true;
-        exportBtn.innerText = "Экспорт...";
 
-        var dictionaryLines = [fileHeaderTitle + " - Словарь"];
-        
-        function translateNext(index) {
-            if (index >= fileWordsArray.length) {
-                var fileContent = dictionaryLines.join('\n');
+        function addToList(text) {
+            const list = document.getElementById('savedList');
+            const item = document.createElement('div');
+            item.className = 'list-item';
+            item.textContent = text;
+            item.onclick = function() { speak(text); };
+            list.appendChild(item);
+        }
+
+        function handleManualShow() {
+            const input = document.getElementById('phraseInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            if (/[а-яА-ЯёЁ]/.test(text) && !text.includes('—')) {
+                addToList(text);
+                input.value = '';
+                return;
+            }
+
+            const translation = translateToRussian(text);
+            let resultText = text;
+            if (translation && translation !== "перевод не найден") {
+                resultText = text + " — " + translation;
+            } else if (translation === "перевод не найден") {
+                resultText = text + " — (добавьте перевод в словарь)";
+            }
+            
+            input.value = resultText; 
+            addToList(resultText); 
+            speak(resultText);     
+        }
+
+        function processWord(word) {
+            if (!word) return;
+
+            if (/[а-яА-ЯёЁ]/.test(word)) {
+                addToList(word); 
+                document.getElementById('phraseInput').value = word;
+                return;
+            }
+
+            const translation = translateToRussian(word);
+            let resultText = word;
+            if (translation && translation !== "перевод не найден") {
+                resultText = word + " — " + translation;
+            } else {
+                resultText = word + " — (нет в словаре)";
+            }
+            
+            document.getElementById('phraseInput').value = resultText; 
+            addToList(resultText); 
+            speak(resultText);
+        }
+
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const files = e.target.files; 
+            if (!files || files.length === 0) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const lines = e.target.result.split('\n');
+                clearList(); 
+                
+                wordsQueue = lines.map(line => line.trim()).filter(line => line.length > 0);
+                
+                if (wordsQueue.length > 0) {
+                    currentQueueIndex = 0;
+                    processWord(wordsQueue[currentQueueIndex]);
+                } else {
+                    alert('Файл пуст.');
+                }
+            };
+            reader.readAsText(files[0]);
+            this.value = '';
+        });
+
+        function nextWord() {
+            if (wordsQueue.length === 0) {
+                alert('Сначала откройте список слов с диска!');
+                return;
+            }
+            
+            if (currentQueueIndex >= wordsQueue.length - 1) {
+                alert('Вы дошли до конца списка слов!');
+                return;
+            }
+            
+            currentQueueIndex++;
+            processWord(wordsQueue[currentQueueIndex]);
+        }
+
+        function clearInput() {
+            document.getElementById('phraseInput').value = '';
+        }
+
+        function clearList() {
+            document.getElementById('savedList').innerHTML = '';
+            wordsQueue = [];
+            currentQueueIndex = -1;
+            clearInput();
+        }
+
+        function copyAudio() {
+            const input = document.getElementById('phraseInput').value;
+            if (!input) return;
+            const cleanText = cleanTextForSpeech(input);
+            navigator.clipboard.writeText(cleanText);
+            alert('Текст скопирован!');
+        }
+
+        function exportList() {
+            const items = document.querySelectorAll('.list-item');
+            if (items.length === 0) return alert('Список пуст!');
+            
+            let textContent = '';
+            items.forEach(item => { textContent += item.textContent + '\n'; });
+
+            const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "translated_list.txt";
+            link.style.display = "none";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
