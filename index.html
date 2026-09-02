@@ -148,10 +148,10 @@
         // Получение чистого кода языка из выпадающего списка
         function getLangCode() {
             const fullCode = document.getElementById('langSelect').value;
-            return fullCode.split('-')[0]; // Берем чистые 'en', 'fr', 'zh', 'be', 'sr'
+            return fullCode.substring(0, 2); // Гарантированно берем 'en', 'fr', 'zh', 'be', 'sr'
         }
 
-        // Прямой fetch-запрос к MyMemory API, разрешенный для полноценных сайтов
+        // Автоматический перевод через MyMemory API
         async function translateOnline(text, callback) {
             if (/[а-яА-ЯёЁ]/.test(text)) {
                 callback(null);
@@ -166,6 +166,7 @@
                 if (!response.ok) throw new Error('Ошибка сервера');
                 const data = await response.json();
                 
+                // ТОЧНОЕ ИЗВЛЕЧЕНИЕ: Извлекаем текстовый перевод из официального ответа MyMemory
                 if (data && data.responseData && data.responseData.translatedText) {
                     callback(data.responseData.translatedText);
                 } else {
@@ -195,7 +196,8 @@
             window.speechSynthesis.cancel(); 
             const utterance = new SpeechSynthesisUtterance(cleanText);
             const fullLang = document.getElementById('langSelect').value;
-            // Карта соответствия языков для синтезатора речи
+            
+            // Карта точного подбора голоса
             if (fullLang.startsWith('en')) utterance.lang = 'en-US';
             else if (fullLang.startsWith('fr')) utterance.lang = 'fr-FR';
             else if (fullLang.startsWith('zh')) utterance.lang = 'zh-CN';
@@ -277,7 +279,7 @@
                     alert('Файл пуст.');
                 }
             };
-            reader.readAsText(files[0]); // Читаем первый выбранный файл
+            reader.readAsText(files[0]); // Читаем первый выбранный файл из массива
             this.value = '';
         });
 
@@ -301,6 +303,7 @@
             document.getElementById('phraseInput').value = '';
         }
 
+        // Исправлено: Полный сброс всех индексов очереди при очистке
         function clearList() {
             document.getElementById('savedList').innerHTML = '';
             wordsQueue = [];
@@ -335,6 +338,7 @@
     </script>
 </body>
 </html>
+
 
 
 
