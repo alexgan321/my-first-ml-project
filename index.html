@@ -147,49 +147,34 @@
 
         // Получение чистого кода языка из выпадающего списка
         function getLangCode() {
-            return document.getElementById('langSelect').value;
+            const fullCode = document.getElementById('langSelect').value;
+            return fullCode.split('-')[0]; // Берем чистые 'en', 'fr', 'zh', 'be', 'sr'
         }
 
-        // Автоматический перевод через MyMemory API (полный обход CORS для локальных файлов)
-        function translateOnline(text, callback) {
+        // Прямой fetch-запрос к MyMemory API, разрешенный для полноценных сайтов
+        async function translateOnline(text, callback) {
             if (/[а-яА-ЯёЁ]/.test(text)) {
                 callback(null);
                 return;
             }
 
             const fromLang = getLangCode();
-            const callbackName = 'mymemoryCallback_' + Math.round(Math.random() * 100000);
+            const url = 'https://translated.net' + encodeURIComponent(text) + '&langpair=' + fromLang + '|ru';
             
-            // Создаем временную функцию для приема ответа от сервера
-            window[callbackName] = function(data) {
-                delete window[callbackName];
-                const scriptEl = document.getElementById(callbackName);
-                if (scriptEl) document.body.removeChild(scriptEl);
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Ошибка сервера');
+                const data = await response.json();
                 
-                try {
-                    if (data && data.responseData && data.responseData.translatedText) {
-                        callback(data.responseData.translatedText);
-                    } else {
-                        callback(text);
-                    }
-                } catch (e) {
+                if (data && data.responseData && data.responseData.translatedText) {
+                    callback(data.responseData.translatedText);
+                } else {
                     callback(text);
                 }
-            };
-
-            // Подключаем скрипт к MyMemory — этот сервер разрешает запросы с диска!
-            const script = document.createElement('script');
-            script.id = callbackName;
-            script.src = 'https://translated.net' + encodeURIComponent(text) + '&langpair=' + fromLang + '|ru&callback=' + callbackName;
-            
-            script.onerror = function() {
-                delete window[callbackName];
-                const scriptEl = document.getElementById(callbackName);
-                if (scriptEl) document.body.removeChild(scriptEl);
-                callback("Ошибка сети");
-            };
-            
-            document.body.appendChild(script);
+            } catch (e) {
+                console.error(e);
+                callback("Ошибка перевода");
+            }
         }
 
         // Выделение иностранной части строки для озвучки (до знака " — ")
@@ -210,7 +195,13 @@
             window.speechSynthesis.cancel(); 
             const utterance = new SpeechSynthesisUtterance(cleanText);
             const fullLang = document.getElementById('langSelect').value;
-            utterance.lang = fullLang === 'en' ? 'en-US' : (fullLang === 'fr' ? 'fr-FR' : (fullLang === 'zh' ? 'zh-CN' : (fullLang === 'be' ? 'be-BY' : 'sr-RS')));
+            // Карта соответствия языков для синтезатора речи
+            if (fullLang.startsWith('en')) utterance.lang = 'en-US';
+            else if (fullLang.startsWith('fr')) utterance.lang = 'fr-FR';
+            else if (fullLang.startsWith('zh')) utterance.lang = 'zh-CN';
+            else if (fullLang.startsWith('be')) utterance.lang = 'be-BY';
+            else if (fullLang.startsWith('sr')) utterance.lang = 'sr-RS';
+            
             window.speechSynthesis.speak(utterance);
         }
 
@@ -344,6 +335,7 @@
     </script>
 </body>
 </html>
+
 
 
 
