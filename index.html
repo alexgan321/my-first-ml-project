@@ -352,7 +352,8 @@
                     alert('Файл пуст.');
                 }
             };
-            reader.readAsText(files); 
+            // ИСПРАВЛЕНО: Теперь читаем строго первый выбранный файл из массива!
+            reader.readAsText(files[0]); 
             this.value = '';
         });
 
@@ -383,6 +384,7 @@
             clearInput();
         }
 
+        // Копировать звук
         function copyAudio() {
             const input = document.getElementById('phraseInput').value;
             if (!input) return;
@@ -411,3 +413,4 @@
     </script>
 </body>
 </html>
+
