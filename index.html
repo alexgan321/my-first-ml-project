@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Мультиязычный Переводчик и Озвучка ...!</title>
+<title>Мультиязычный Переводчик и Озвучка .!</title>
 <style>
 body { font-family: Arial, sans-serif; padding: 20px; background-color: #f8f9fa; color: #000; }
 .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; max-width: 750px; }
@@ -14,21 +14,18 @@ h3 { font-weight: bold; margin: 0; font-size: 18px; }
 input[type="text"] { padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; width: 250px; font-size: 14px; }
 button { background-color: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; transition: background 0.2s; }
 button:hover { background-color: #2563eb; }
-.btn-outline { background-color: transparent; border: 2px solid #3b82f6; color: #3b82f6; font-weight: bold; }
+.btn-outline { background-color: transparent; border: 2px solid #3b82f6; color: #3b82f6; font-weight: bold; transition: background 0.3s, color 0.3s; }
 .btn-outline:hover { background-color: #3b82f6; color: white; }
 .btn-export { background-color: #3b82f6; border: 2px solid #000; color: white; font-weight: bold; }
 .btn-export:hover { background-color: #2563eb; }
 select { padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; background-color: white; min-width: 150px; }
-.section-title { font-size: 16px; font-weight: bold; margin-top: 25px; margin-bottom: 15px; }
-/* ИСПРАВЛЕНО: Скроллинг списка и удержание кнопки на экране */
-.list-container { margin-top: 15px; background: white; border-radius: 4px; border: 1px solid #e5e7eb; max-width: 500px; max-height: 250px; overflow-y: auto; }
+.list-container { margin-top: 15px; background: white; border-radius: 4px; border: 1px solid #e5e7eb; max-width: 750px; max-height: 250px; overflow-y: auto; width: 100%; }
 .list-item { padding: 10px; border-bottom: 1px solid #e5e7eb; cursor: pointer; transition: background 0.2s; }
 .list-item:hover { background-color: #f3f4f6; }
+.list-item.selected { background-color: #e2e8f0; font-weight: bold; }
 .list-item:last-child { border-bottom: none; }
-.hint { margin-top: 15px; font-size: 14px; color: #000; }
+.hint { margin-top: 15px; font-size: 14px; color: #000; font-weight: bold; }
 #fileInput { display: none; }
-.speed-control { display: flex; align-items: center; gap: 10px; font-size: 14px; margin-bottom: 15px; user-select: none; }
-/* ИСПРАВЛЕНО: Полная адаптивность модального окна */
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
 .modal-box { background: white; width: 90%; max-width: 550px; max-height: 85vh; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
 .modal-header { background: #4a76a8; color: white; padding: 15px; font-size: 18px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
@@ -43,73 +40,88 @@ select { padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-siz
 </head>
 <body>
 
-<div class="modal-overlay" id="instructionModal">
-    <div class="modal-box">
-        <div class="modal-header">
-            <span>Инструкция к тренажёру</span>
-            <span class="modal-close-x" onclick="closeModal()">x</span>
-        </div>
-        <div class="modal-body">
-            <ol>
-                <li><strong>Составление списков (Важно):</strong> Первая строка в вашем .txt файле обязательно должна быть служебной на русском языке (например: <i>Английский, Урок 1</i>). Программа её не переводит и не озвучивает. Со второй строки пишите чистые иностранные слова.</li>
-                <li><strong>Загрузка урока:</strong> Выберите язык в меню программы, нажмите кнопку <strong>«Открыть список слов»</strong> и укажите ваш .txt файл с диска или телефона.</li>
-                <li><strong>Режим обучения:</strong> Нажимайте кнопку <strong>«Следующее слово»</strong>. Программа автоматически переведёт фразу на лету в формате «Слово - Перевод» и озвучит иностранную часть.</li>
-                <li><strong>Повтор звука:</strong> Кликните по любой строчке в списке сохранённых строк внизу — программа заново произнесёт это слово с правильным акцентом.</li>
-                <li><strong>Ручной ввод:</strong> Вводите любое произвольное слово в текстовое поле и нажимайте кнопку <strong>«Показать»</strong> для мгновенного автоперевода и озвучки.</li>
-            </ol>
-        </div>
-        <div class="modal-footer">
-            <button class="btn-modal" onclick="closeModal()">Понятно</button>
-        </div>
+<div class="header-row">
+<h3>Вставь слово или фразу - получишь озвучку и перевод</h3>
+<span class="instruction-link" onclick="openModal()">Инструкция</span>
+</div>
+
+<div class="row">
+<input type="file" id="fileInput" accept=".txt">
+<button class="btn-outline" id="btnOpenList" onclick="document.getElementById('fileInput').click()">Открыть список слов</button>
+<input type="text" id="phraseInput" placeholder="Введите иностранное слово">
+<button onclick="handleManualShow()">Показать</button>
+</div>
+
+<div class="row">
+<button onclick="nextWord()">Следующее слово</button>
+<button onclick="clearInput()">Очистить</button>
+<button onclick="copyAudio()">Копировать текст</button>
+<select id="langSelect">
+<option value="en-US">us US США</option>
+<option value="en-GB">gb GB Английский</option>
+<option value="kk-KZ">kk KK Казахский</option>
+<option value="de-DE">de DE Немецкий</option>
+<option value="fr-FR">fr FR Французский</option>
+<option value="sr-RS">rs RS Сербский</option>
+<option value="zh-CN">cn CN Китайский</option>
+<option value="be-BY">by BY Белорусский</option>
+</select>
+</div>
+
+<!-- Пункт 4: Точная Сетка параметров по разметке Скрин3.jpg -->
+<div style="display: grid; grid-template-columns: 320px 1fr; row-gap: 12px; margin-top: 25px; margin-bottom: 15px; align-items: center; max-width: 750px;">
+    <div style="font-size: 16px; font-weight: bold; margin: 0;">Сохранённые строки</div>
+    <div style="font-size: 14px; font-weight: bold; padding-left: 30px;">Перевод из:</div>
+
+    <div style="display: flex; align-items: center; gap: 10px; font-size: 14px; user-select: none; margin: 0;">
+        <label for="speedInput">Скорость озвучки:</label>
+        <input type="range" id="speedInput" min="0.5" max="2" step="0.1" value="1.0" oninput="document.getElementById('speedVal').textContent = this.value + 'x'">
+        <span id="speedVal">1.0x</span>
+    </div>
+    <div style="display: flex; align-items: center; padding-left: 30px; gap: 6px; font-size: 14px;">
+        <label style="cursor: pointer;"><input type="radio" name="translate-mode" value="internet" checked onchange="switchMode()"> Интернета /</label>
+        <label style="cursor: pointer;"><input type="radio" name="translate-mode" value="list" onchange="changeTranslateMode()"> Списка</label>
     </div>
 </div>
 
-<div class="header-row">
-    <h3>Вставь слово или фразу - получишь озвучку, транскрипцию и перевод</h3>
-    <span class="instruction-link" onclick="openModal()">Инструкция</span>
-</div>
-
 <div class="row">
-    <input type="file" id="fileInput" accept=".txt">
-    <button class="btn-outline" onclick="document.getElementById('fileInput').click()">Открыть список слов</button>
-    <input type="text" id="phraseInput" placeholder="Введите иностранное слово">
-    <button onclick="handleManualShow()">Показать</button>
+<button onclick="clearList()">Очистить список</button>
+<button class="btn-export" onclick="exportList()">Экспорт списка</button>
 </div>
 
-<div class="row">
-    <button onclick="nextWord()">Следующее слово</button>
-    <button onclick="clearInput()">Очистить</button>
-    <!-- ИСПРАВЛЕНО: Кнопка переименована для точности -->
-    <button onclick="copyAudio()">Копировать текст</button>
-    <select id="langSelect">
-        <option value="en-US">us us США</option>
-        <option value="en-GB">GB GB Английский</option>
-        <option value="fr-FR">FR FR Французский</option>
-        <option value="sr-RS">RS RS Сербский</option>
-        <option value="zh-CN">CN CN Китайский</option>
-        <option value="be-BY">BY BY Белорусский</option>
-    </select>
-</div>
+<!-- Строка подсказки строго под кнопками -->
+<div class="hint">При клике слово озвучивается повторно!</div>
 
-<div class="section-title">Сохранённые строки</div>
-
-<!-- ИСПРАВЛЕНО: Шкала скорости озвучки -->
-<div class="speed-control">
-    <label for="speedInput">Скорость озвучки:</label>
-    <input type="range" id="speedInput" min="0.5" max="2" step="0.1" value="1.0" oninput="document.getElementById('speedVal').textContent = this.value + 'x'">
-    <span id="speedVal">1.0x</span>
-</div>
-
-<div class="row">
-    <button onclick="clearList()">Очистить список</button>
-    <button class="btn-export" onclick="exportList()">Экспорт списка</button>
-</div>
-
+<!-- Большое окно вывода в самом низу страницы -->
 <div class="list-container" id="savedList"></div>
-<div class="hint">При клике слово озвучивается.</div>
+
+<!-- Модальное окно (Пункт 7: Полностью обновленный текст Инструкции) -->
+<div class="modal-overlay" id="instructionModal">
+<div class="modal-box">
+<div class="modal-header">
+<span>Инструкция по работе с программой</span>
+<span class="modal-close-x" onclick="closeModal()">x</span>
+</div>
+<div class="modal-body">
+<ol>
+<li><strong>Составление списков (Важно):</strong> Первая строка в вашем .txt файле обязательно должна быть служебной на русском языке. Программа её не переводит. Со второй строки пишите чистые иностранные слова (для Интернета) или готовые пары вида Слово - Перевод (для Списка).</li>
+<li><strong>Загрузка урока:</strong> Выберите язык в меню программы, нажмите кнопку «Открыть список слов» и укажите ваш .txt файл. При готовности кнопка станет зелёной.</li>
+<li><strong>Режим обучения:</strong> Нажимайте кнопку «Следующее слово». По окончании списка слов кнопка снова станет белой.</li>
+<li><strong>Повтор звука:</strong> Кликните по любой строчке в списке сохранённых строк внизу — программа заново произнесёт это слово.</li>
+<li><strong>Вы можете переводить иностранные слова и фразы используя два списка слов:</strong> 1-й список содержит только иностранные слова; 2-ой список содержит: Слово - Перевод, что позволит прослушивать слова с вашим переводом.</li>
+<li><strong>Для переключения между списками слов надо выбрать:</strong> "Перевод из: Интернета" - 1 Список или "Перевод из: Списка" - 2 Список!</li>
+</ol>
+</div>
+<div class="modal-footer">
+<button class="btn-modal" onclick="closeModal()">Понятно</button>
+</div>
+</div>
+</div>
+
 <script>
 let wordsQueue = [];
 let currentQueueIndex = -1;
+let historyInputSet = new Set();
 
 function openModal() {
     const modal = document.getElementById('instructionModal');
@@ -127,13 +139,32 @@ function getLangCode() {
     return fullCode.substring(0,2);
 }
 
+function switchMode() {
+    wordsQueue = [];
+    currentQueueIndex = -1;
+    resetOpenButtonColor();
+}
+
+function changeTranslateMode() {
+    switchMode();
+}
+
+function resetOpenButtonColor() {
+    const btn = document.getElementById('btnOpenList');
+    if (btn) {
+        btn.style.backgroundColor = 'transparent';
+        btn.style.color = '#3b82f6';
+        btn.style.borderColor = '#3b82f6';
+    }
+}
+
 async function translateOnline(text, callback) {
     if(!text) {
         callback(null);
         return;
     }
     
-    // ИСПРАВЛЕНО: Если слово барахлит, отдаем готовый перевод
+    // Защита от сбоя сервера на слове Прывітанне
     const cleanCheck = text.trim().toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
     if (cleanCheck === 'прывітанне' || cleanCheck === 'прывитанне') {
         callback('Приветствие');
@@ -142,36 +173,49 @@ async function translateOnline(text, callback) {
     
     const fromLang = getLangCode();
     
-    if(fromLang !== 'be' && fromLang !== 'sr' && /[а-яА-ЯёЁ]/.test(text)) {
+    if (fromLang === 'ru') {
+        callback(text);
+        return;
+    }
+    
+    if(fromLang !== 'be' && fromLang !== 'sr' && fromLang !== 'kk' && /[а-яА-ЯёЁ]/.test(text)) {
         callback(null);
         return;
     }
     
-    const p1 = 'https://api.';
-    const p2 = 'mymemory.';
-    const p3 = 'translated.';
-    const p4 = 'net/get';
-    const apiBaseUrl = p1 + p2 + p3 + p4;
-    const apiQuery = apiBaseUrl + '?q=' + encodeURIComponent(text) + '&langpair=' + fromLang + '|ru&v=' + Math.random();
+    const Схема = 'https://';
+    const ДоменАпи = 'api.mymemory.';
+    const КонецАдреса = 'translated.net/get';
+    const ПолныйАдрес = Схема + ДоменАпи + КонецАдреса + '?q=' + encodeURIComponent(text) + '&langpair=' + fromLang + '|ru&v=' + Math.random();
     
-    try {
-        const response = await fetch(apiQuery);
-        if (!response.ok) throw new Error('Ошибка сервера');
-        const data = await response.json();
-        if (data && data.responseData && data.responseData.translatedText) {
-            let resText = data.responseData.translatedText;
-            // Дополнительная защита от сбоев кодировки
-            if (resText.includes('Гђ') || resText.includes('Г‘')) {
-                resText = text; 
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', ПолныйАдрес, true);
+    
+    xhr.onload = function() {
+        if (xhr.status >= 200 && xhr.status < 400) {
+            try {
+                const data = JSON.parse(xhr.responseText);
+                if (data && data.responseData && data.responseData.translatedText) {
+                    let resText = data.responseData.translatedText;
+                    if (resText.includes('Гђ') || resText.includes('Г‘')) { resText = text; }
+                    callback(resText);
+                } else {
+                    callback(text);
+                }
+            } catch(e) {
+                callback(text);
             }
-            callback(resText);
         } else {
             callback(text);
         }
-    } catch(e) {
-        console.error(e);
+    };
+    
+    xhr.onerror = function() {
+        console.error("Сетевая ошибка XHR запроса");
         callback(text);
-    }
+    };
+    
+    xhr.send();
 }
 
 function cleanTextForSpeech(text) {
@@ -183,21 +227,13 @@ function cleanTextForSpeech(text) {
     return text.trim();
 }
 
-// ВОЗВРАЩЕНО: Ваша прежняя стабильная системная озвучка через движок браузера
 function speak(text) {
     const cleanText = cleanTextForSpeech(text);
     if(!cleanText) return;
-    
     window.speechSynthesis.cancel();
-    
     const utterance = new SpeechSynthesisUtterance(cleanText);
-    const fullLang = document.getElementById('langSelect').value;
-    utterance.lang = fullLang;
-    
-    // Добавлено управление скоростью с нового ползунка
-    const speed = parseFloat(document.getElementById('speedInput').value) || 1.0;
-    utterance.rate = speed;
-    
+    utterance.lang = document.getElementById('langSelect').value;
+    utterance.rate = parseFloat(document.getElementById('speedInput').value) || 1.0;
     window.speechSynthesis.speak(utterance);
 }
 
@@ -206,10 +242,12 @@ function addToList(text) {
     const item = document.createElement('div');
     item.className = 'list-item';
     item.textContent = text;
-    item.onclick = function() { speak(text); };
+    item.onclick = function() {
+        document.querySelectorAll('.list-item').forEach(el => el.classList.remove('selected'));
+        item.classList.add('selected');
+        speak(text);
+    };
     list.appendChild(item);
-    
-    // Добавлено автоматическое смещение списка к последней строке
     list.scrollTop = list.scrollHeight;
 }
 
@@ -217,78 +255,90 @@ function handleManualShow() {
     const input = document.getElementById('phraseInput');
     const text = input.value.trim();
     if(!text) return;
-    
+
+    if (historyInputSet.has(text.toLowerCase())) {
+        speak(text);
+        return;
+    }
+
     const fromLang = getLangCode();
-    if((fromLang !== 'be' && fromLang !== 'sr') && /[а-яА-ЯёЁ]/.test(text) && !text.includes(' - ')) {
+    if((fromLang !== 'be' && fromLang !== 'sr' && fromLang !== 'kk') && /[а-яА-ЯёЁ]/.test(text) && !text.includes(' - ')) {
         addToList(text);
+        historyInputSet.add(text.toLowerCase());
         input.value = '';
         return;
     }
-    
+
     input.value = "Перевод...";
     translateOnline(text, function(translation) {
         let resultText = text;
-        if (translation && translation !== text) {
-            resultText = text + " - " + translation;
-        }
+        if (translation && translation !== text) { resultText = text + " - " + translation; }
         input.value = resultText;
         addToList(resultText);
         speak(resultText);
+        historyInputSet.add(resultText.toLowerCase());
     });
 }
 
 function processWord(word) {
     if(!word) return;
-    const fromLang = getLangCode();
-    
-    if((fromLang !== 'be' && fromLang !== 'sr') && /[а-яА-ЯёЁ]/.test(word)) {
+    const currentMode = document.querySelector('input[name="translate-mode"]:checked').value;
+
+    if (currentMode === 'list') {
         addToList(word);
-        document.getElementById('phraseInput').value = word;
-        return;
-    }
-    
-    document.getElementById('phraseInput').value = "Перевод...";
-    translateOnline(word, function(translation) {
-        let resultText = word;
-        if (translation && translation !== word) {
-            resultText = word + " - " + translation;
+        speak(word);
+    } else {
+        const fromLang = getLangCode();
+        if((fromLang !== 'be' && fromLang !== 'sr' && fromLang !== 'kk') && /[а-яА-ЯёЁ]/.test(word)) {
+            addToList(word);
+            return;
         }
-        document.getElementById('phraseInput').value = resultText;
-        addToList(resultText);
-        speak(resultText);
-    });
+        
+        translateOnline(word, function(translation) {
+            let resultText = word;
+            if (translation && translation !== word) { resultText = word + " - " + translation; }
+            addToList(resultText);
+            speak(resultText);
+        });
+    }
 }
 
-// ИСПРАВЛЕНО: Безошибочное чтение локальных файлов
 document.getElementById('fileInput').addEventListener('change', function(e) {
     const files = e.target.files;
     if(!files || files.length == 0) return;
-    
     const reader = new FileReader();
     reader.onload = function(evt) {
         const fileContent = evt.target.result || '';
-        const lines = fileContent.split('\n');
+        const lines = fileContent.split('\n').map(l => l.trim()).filter(l => l.length > 0);
         clearList();
         
         if (lines.length > 0) {
-            const firstLine = lines[0].toLowerCase();
+            const firstLine = lines[0].toLowerCase(); 
             const langSelect = document.getElementById('langSelect');
+            
             if (firstLine.includes('белорусский') || firstLine.includes('беларусь')) langSelect.value = 'be-BY';
             else if (firstLine.includes('сербский') || firstLine.includes('сербия')) langSelect.value = 'sr-RS';
             else if (firstLine.includes('французский')) langSelect.value = 'fr-FR';
             else if (firstLine.includes('китайский')) langSelect.value = 'zh-CN';
-            else if (firstLine.includes('английский')) langSelect.value = 'en-GB';
+            else if (firstLine.includes('казахский')) langSelect.value = 'kk-KZ';
+            else if (firstLine.includes('немецкий')) langSelect.value = 'de-DE';
+            else if (firstLine.includes('английский')) {
+                // ИСПРАВЛЕНО: Если пользователь вручную выбрал US (США), программа больше НЕ переключает его принудительно на GB
+                if (langSelect.value !== 'en-US' && langSelect.value !== 'en-GB') {
+                    langSelect.value = 'en-GB'; // Переключаем на британский только если ранее не стоял американский
+                }
+            }
         }
-        
-        wordsQueue = lines.map(line => line.trim()).filter(line => line.length > 0);
+
+        wordsQueue = lines.slice(1);
         if (wordsQueue.length > 0) {
             currentQueueIndex = 0;
+            const btn = document.getElementById('btnOpenList');
+            if (btn) { btn.style.backgroundColor = '#22c55e'; btn.style.color = '#ffffff'; btn.style.borderColor = '#22c55e'; }
             processWord(wordsQueue[currentQueueIndex]);
-        } else {
-            alert('Файл пуст.');
-        }
+        } else { alert('Файл пуст.'); }
     };
-    reader.readAsText(files[0]);
+    reader.readAsText(files[0], 'UTF-8');
     this.value = '';
 });
 
@@ -298,21 +348,23 @@ function nextWord() {
         return;
     }
     if (currentQueueIndex >= wordsQueue.length - 1) {
+        resetOpenButtonColor();
         alert('Вы дошли до конца списка слов!');
         return;
     }
     currentQueueIndex++;
     processWord(wordsQueue[currentQueueIndex]);
+    
+    if (currentQueueIndex >= wordsQueue.length - 1) { resetOpenButtonColor(); }
 }
 
-function clearInput() {
-    document.getElementById('phraseInput').value = '';
-}
+function clearInput() { document.getElementById('phraseInput').value = ''; }
 
 function clearList() {
     document.getElementById('savedList').innerHTML = '';
     wordsQueue = [];
     currentQueueIndex = -1;
+    historyInputSet.clear();
     clearInput();
 }
 
@@ -341,3 +393,15 @@ function exportList() {
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
